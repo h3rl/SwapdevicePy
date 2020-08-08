@@ -15,14 +15,11 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         menu = QtWidgets.QMenu(parent)
         change_device = menu.addAction("Change Device")
         change_device.triggered.connect(self.change_device)
-        #change_device.setIcon(QtGui.QIcon("icon.png"))
 
         menu.addSeparator()
 
         exit_ = menu.addAction("Exit")
         exit_.triggered.connect(lambda: sys.exit())
-        #exit_.setIcon(QtGui.QIcon("icon.png"))
-
 
         self.setContextMenu(menu)
         self.activated.connect(self.onTrayIconActivated)
@@ -38,7 +35,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
     def change_device(self):
         """
-        this function will open application
+        this function will change default sound device and r/w config.json
         :return:
         """
         filesize = os.stat("config.json").st_size
