@@ -1,9 +1,12 @@
-import os
-import sys
-import subprocess
 import json
-from PySide2 import QtWidgets, QtGui, QtCore
+import os
+import subprocess
+import sys
 
+from PySide2 import QtCore, QtGui, QtWidgets
+
+appVersion = "1.7"
+appName = "Change Device"
 
 class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     """
@@ -11,7 +14,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     """
     def __init__(self, icon, parent=None):
         QtWidgets.QSystemTrayIcon.__init__(self, icon, parent)
-        self.setToolTip(f'ChangeSound - 1.5')
+        self.setToolTip(f'ChangeSound')
         menu = QtWidgets.QMenu(parent)
         change_device = menu.addAction("Change Device")
         change_device.triggered.connect(self.change_device)
@@ -20,6 +23,9 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
         exit_ = menu.addAction("Exit")
         exit_.triggered.connect(lambda: sys.exit())
+
+        #about_ = menu.addAction("About")
+        #about_.triggered.connect(self.showabout)
 
         self.setContextMenu(menu)
         self.activated.connect(self.onTrayIconActivated)
@@ -32,6 +38,15 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         """
         if reason == self.DoubleClick:
             self.change_device()
+
+    def showabout(self):
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setText("\nMade by H3rl\nver "+appVersion)
+        msg.setWindowTitle("About "+appName)
+        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msg.setStyleSheet("QLabel{min-width: 150px;}");
+        msg.exec_()
 
     def change_device(self):
         """
@@ -46,7 +61,8 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
                 "list": [
                     "Speakers",
                     "Headset"
-                ]
+                ],
+                "alerts": True
             }, sort_keys=True, indent=4))
             handle.close()
         else:
@@ -59,7 +75,8 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
             data["current"] = data["list"][newcurr]
             cmd = "nircmd setdefaultsounddevice " + data["current"] + " 1 & nircmd setdefaultsounddevice " + data["current"] + " 2"
             subprocess.call(cmd, shell=True)
-            self.showMessage("Device Changed",data["current"],QtGui.QIcon("assets/"+data["current"]+".png"))
+            if data["alerts"]:
+                self.showMessage("Device Changed",data["current"],QtGui.QIcon("assets/"+data["current"]+".png"))
             handle = open("config.json","w+")
             handle.write(json.dumps(data, sort_keys=True, indent=4))
             handle.close()

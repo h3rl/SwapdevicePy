@@ -1,5 +1,6 @@
 {
-    "current": "Speakers",
+    "alerts": false,
+    "current": "Headset",
     "list": [
         "Speakers",
         "Headset"
