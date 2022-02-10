@@ -5,7 +5,7 @@ import sys
 
 from PySide2 import QtCore, QtGui, QtWidgets
 
-appVersion = "1.7"
+appVersion = "2.0"
 appName = "Change Device"
 
 class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
@@ -24,11 +24,13 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         exit_ = menu.addAction("Exit")
         exit_.triggered.connect(lambda: sys.exit())
 
-        #about_ = menu.addAction("About")
-        #about_.triggered.connect(self.showabout)
+        about_ = menu.addAction("About")
+        about_.triggered.connect(self.showabout)
 
         self.setContextMenu(menu)
         self.activated.connect(self.onTrayIconActivated)
+        
+        self.loadConfig()
 
     def onTrayIconActivated(self, reason):
         """
@@ -47,39 +49,45 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         msg.setStyleSheet("QLabel{min-width: 150px;}");
         msg.exec_()
+    
+    def loadConfig(self):
+        exists = os.path.exists("./config.json")
+        if not exists:
+            self.data = {
+                "current": "Headset",
+                "list": ["Speakers", "Headset"],
+                "alerts":True
+            }
+        else:
+            handle = open("config.json","r")
+            self.data = json.load(handle)
+            handle.close()
 
     def change_device(self):
-        """
-        this function will change default sound device and r/w config.json
-        :return:
-        """
-        filesize = os.stat("config.json").st_size
-        handle = open("config.json","r+")
-        if filesize == 0:
-            handle.write(json.dumps({
-                "current": "Headset",
-                "list": [
-                    "Speakers",
-                    "Headset"
-                ],
-                "alerts": True
-            }, sort_keys=True, indent=4))
-            handle.close()
-        else:
-            data = json.load(handle)
-            handle.close()
-            
-            newcurr = data["list"].index(data["current"])+1
-            if newcurr >= len(data["list"]):
-                newcurr = 0
-            data["current"] = data["list"][newcurr]
-            cmd = "nircmd setdefaultsounddevice " + data["current"] + " 1 & nircmd setdefaultsounddevice " + data["current"] + " 2"
-            subprocess.call(cmd, shell=True)
-            if data["alerts"]:
-                self.showMessage("Device Changed",data["current"],QtGui.QIcon("assets/"+data["current"]+".png"))
-            handle = open("config.json","w+")
-            handle.write(json.dumps(data, sort_keys=True, indent=4))
-            handle.close()
+        self.loadConfig()
+        list = self.data["list"]
+        current = self.data["current"]
+        alerts = self.data["alerts"]
+
+        newcurr = list.index(current) + 1
+        if newcurr >= len(list):
+            newcurr = 0
+        current = list[newcurr]
+        subprocess.call(f"nircmd setdefaultsounddevice {current} 1 & nircmd setdefaultsounddevice {current} 2", shell=True)
+
+        if alerts:
+            self.showMessage("Device Changed",current,QtGui.QIcon("assets/"+current+".png"))
+        
+        self.data["current"] = current
+
+        print(self.data)
+        self.saveConfig()
+
+    def saveConfig(self):
+        handle = open("config.json","w+")
+        stringified = json.dumps(self.data, sort_keys=True, indent=4)
+        handle.write(stringified)
+        handle.close()
             
 
 def main():
