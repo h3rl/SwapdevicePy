@@ -5,8 +5,13 @@ import sys
 
 from PySide2 import QtCore, QtGui, QtWidgets
 
-appVersion = "2.0"
+appVersion = "2.1"
 appName = "Change Device"
+
+
+#   TODO
+#   * closes after about is pressed
+#
 
 class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     """
@@ -47,8 +52,9 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         msg.setText("\nMade by H3rl\nver "+appVersion)
         msg.setWindowTitle("About "+appName)
         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        msg.setStyleSheet("QLabel{min-width: 150px;}");
+        #msg.setStyleSheet("QLabel{min-width: 150px;}")
         msg.exec_()
+
     
     def loadConfig(self):
         exists = os.path.exists("./config.json")
